@@ -15,30 +15,37 @@ func check(err error){
 	}
 }
 
-func cacheObject(c *c.Cache, obj *o.Object, name string) error {
-	err := c.SaveRecord(
-		name, 
-		obj.ToMarshal(), 
+func main() {
+	cache, err := c.BuildBoltCache(
+		"bolt",
+		"test",
+	)
+	defer cache.Close()
+	check(err)
+
+	var inObj = o.Object{
+		Field: "test",
+	}
+
+	err = cache.SaveRecord(
+		"testObj", 
+		inObj.ToMarshal(), 
 		0,
 	)
-	return err
+	check(err)
+
+	var outObj o.Object
+	payload, err := cache.LoadRecord("testObj")
+	check(err)
+
+	err = outObj.FromMarshal(payload)
+	check(err)
+
+	fmt.Println(outObj)
 }
 
-func fetchObject(c *c.Cache, name string) (obj o.Object, err error){
-	payload, err := c.LoadRecord(name)
-	if err != nil {
-		return obj, err
-	}
-	err = obj.FromMarshal(payload)
-	if err != nil {
-		return obj, err
-	}
-
-	return obj, nil
-}
-
-func main() {
-	cache, err := c.BuildCache(
+func redis() {
+	cache, err := c.BuildRedisCache(
 		"redis", 
 		6379, 
 		"", 
@@ -47,14 +54,23 @@ func main() {
 	)
 	check(err)
 
-	var obj = o.Object{
+	var inObj = o.Object{
 		Field: "test",
 	}
 
-	err = cacheObject(&cache, &obj, "testObj")
+	err = cache.SaveRecord(
+		"testObj", 
+		inObj.ToMarshal(), 
+		0,
+	)
 	check(err)
 
-	payload, err := fetchObject(&cache, "testObj")
+	var outObj o.Object
+	payload, err := cache.LoadRecord("test")
 	check(err)
-	fmt.Println(payload)
+
+	err = outObj.FromMarshal(payload)
+	check(err)
+
+	fmt.Println(outObj)
 }

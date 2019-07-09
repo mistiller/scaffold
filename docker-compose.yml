@@ -2,7 +2,7 @@ version: '3'
 services:
   app:
     build: .
-    image: ${IMAGE_REPO}/app:latest
+    #image: ${IMAGE_REPO}/app:latest
     depends_on:
       - redis
     #ports:

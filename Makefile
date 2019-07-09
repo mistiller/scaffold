@@ -18,6 +18,9 @@ clean:
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_UNIX)
 deps:
-		$(GOGET) github.com/go-redis/redis
-build-docker: 
-	docker-compose build && docker-compose up
+	$(GOGET) github.com/go-redis/redis
+	$(GOGET) github.com/boltdb/bolt
+build-docker-compose: 
+	docker-compose build && docker-compose up && make clean
+docker:
+	docker build -t goexp . && docker run goexp
