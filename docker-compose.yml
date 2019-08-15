@@ -1,11 +1,30 @@
-version: '3'
+version: '3.7'
 services:
   app:
     build: .
+    command: ["./wait-for-it.sh", "db:5432", "--", "./app"]
     #image: ${IMAGE_REPO}/app:latest
+    links:
+      - db
     depends_on:
+      - db
       - redis
     #ports:
     #  - "5000:5000"
   redis:
     image: "redis:alpine"
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    #restart: always
+    environment:
+      POSTGRES_USER: gorm
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: gorm
+          
+  adminer:
+    image: adminer
+    #restart: always
+    ports:
+      - 8080:8080

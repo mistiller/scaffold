@@ -13,9 +13,16 @@ type RedisCache struct {
 	compressed bool
 }
 
-func BuildRedisCache(host string, port int, password string, db int, compressed bool)(cache Cache, err error){
+func NewRedisCache(host string, port int, password string, db int, compressed bool)(cache Cache, err error){
+	var addr string
+	if port > 0 {
+		addr = fmt.Sprintf("%s:%d", host, port)
+	} else {
+		addr = host
+	}
+	
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", host, port),
+		Addr:     addr,
 		Password: password,
 		DB:       db,  // 0 = default DB
 	})
@@ -34,6 +41,7 @@ func BuildRedisCache(host string, port int, password string, db int, compressed 
 		compressed: compressed,
 	}, nil
 }
+
 
 func (c RedisCache) SaveRecord(key string, record []byte, expiration time.Duration) (err error){
 	err = c.client.Set(key, z.Zip(record), expiration).Err()

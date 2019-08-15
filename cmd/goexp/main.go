@@ -1,76 +1,76 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"log"
 
 	c "stillgrove.com/goexp/pkg/cache"
 	o "stillgrove.com/goexp/pkg/object"
+	db "stillgrove.com/goexp/pkg/database"
 )
+  
+type Product struct {
+	db.Object
+	Code string
+	Price uint
+}
 
 func check(err error){
 	if err != nil{
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalf("%v", err)
 	}
 }
 
 func main() {
-	cache, err := c.BuildBoltCache(
-		"bolt",
-		"test",
-	)
-	defer cache.Close()
-	check(err)
-
-	var inObj = o.Object{
-		Field: "test",
-	}
-
-	err = cache.SaveRecord(
-		"testObj", 
-		inObj.ToMarshal(), 
-		0,
+	pg, err := db.NewPostgresDB(
+		"db",
+		"gorm",
+		"gorm",
+		"mypassword",
+		5432,
+		Product{},
 	)
 	check(err)
 
-	var outObj o.Object
-	payload, err := cache.LoadRecord("testObj")
-	check(err)
+	product := new(Product)
+	*product = Product{Code: "L1212", Price: 1000}
 
-	err = outObj.FromMarshal(payload)
-	check(err)
+	pg.CreateOne(product)
+	pg.ReadOne(product, "code = ?", "L1212") 
+	//pg.UpdateOne(product, "Price", 2000)
 
-	fmt.Println(outObj)
+	log.Println(*product)
+	pg.DeleteOne(product)
 }
 
-func redis() {
-	cache, err := c.BuildRedisCache(
+func cache() {
+	cache, err := c.NewRedisCache(
 		"redis", 
 		6379, 
 		"", 
 		0,
 		true,
 	)
+	
 	check(err)
-
+	defer cache.Close()
+	
 	var inObj = o.Object{
 		Field: "test",
 	}
-
+	
 	err = cache.SaveRecord(
 		"testObj", 
 		inObj.ToMarshal(), 
 		0,
 	)
 	check(err)
-
+	
 	var outObj o.Object
-	payload, err := cache.LoadRecord("test")
+	payload, err := cache.LoadRecord("testObj")
 	check(err)
-
+	
 	err = outObj.FromMarshal(payload)
 	check(err)
 
-	fmt.Println(outObj)
+	log.Println(outObj)
 }

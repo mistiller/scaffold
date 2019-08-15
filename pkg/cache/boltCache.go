@@ -13,7 +13,7 @@ type BoltCache struct {
 	bucketName string
 }
 
-func BuildBoltCache(DBName, bucketName string)(cache Cache, err error){
+func NewBoltCache(DBName, bucketName string)(cache Cache, err error){
 	db, err := bolt.Open(DBName+".db", 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return cache, err
