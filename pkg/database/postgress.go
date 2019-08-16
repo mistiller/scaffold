@@ -4,14 +4,27 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	mocket "github.com/selvatico/go-mocket"
 )
-
-type Object struct {
-	gorm.Model
-}
 
 type PostgresDB struct {
 	client *gorm.DB
+}
+
+func NewPGTestDB(host, user, dbname, password string, port int, object interface{}) (*PostgresDB,  error) {
+	db := PostgresDB{}
+	var err error
+
+	mocket.Catcher.Register()
+	mocket.Catcher.Logging = true
+
+	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%d sslmode=disable", host, user, dbname, password, port)
+	db.client, err = gorm.Open(mocket.DriverName, connectionString)
+	if err != nil {
+		return &db, fmt.Errorf("Error setting up test database: - %s",err)
+	}
+
+	return &db, nil
 }
 
 func NewPostgresDB(host, user, dbname, password string, port int, object interface{}) (*PostgresDB,  error) {
@@ -21,7 +34,7 @@ func NewPostgresDB(host, user, dbname, password string, port int, object interfa
 	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%d sslmode=disable", host, user, dbname, password, port)
 	db.client, err = gorm.Open("postgres", connectionString)
 	if err != nil {
-		return &db, err
+		return &db, fmt.Errorf("Error connecting to database: - %s",err)
 	}
 	err = db.client.AutoMigrate(object).Error
 	if err != nil {
@@ -32,6 +45,7 @@ func NewPostgresDB(host, user, dbname, password string, port int, object interfa
 }
 
 func (db PostgresDB) CreateOne(object interface{}) error {
+	fmt.Println(object)
 	err := db.client.Create(object).Error
 	return err
 }
